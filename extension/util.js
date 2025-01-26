@@ -227,7 +227,7 @@ function deleteExclude(key, callback) {
     return false
   }
 
-  const excludes = vscode.workspace.getConfiguration().get('files.exclude', vscode.ConfigurationTarget.Workspace) || {}
+  const excludes = getCurrentWorkspaceExcludes()
 
   // Remove if already set
   if (key && Object.prototype.hasOwnProperty.call(excludes, key)) {
@@ -246,7 +246,7 @@ function deleteExclude(key, callback) {
  * @param {function} callback
  */
 function disableAll(callback) {
-  const excludes = vscode.workspace.getConfiguration().get('files.exclude', vscode.ConfigurationTarget.Workspace) || {}
+  const excludes = getCurrentWorkspaceExcludes()
 
   for (let key in excludes) {
     if (Object.prototype.hasOwnProperty.call(excludes, key)) {
@@ -262,7 +262,7 @@ function disableAll(callback) {
  * @param {function} callback
  */
 function enableAll(callback) {
-  const excludes = vscode.workspace.getConfiguration().get('files.exclude', vscode.ConfigurationTarget.Workspace) || {}
+  const excludes = getCurrentWorkspaceExcludes() || {}
 
   for (let key in excludes) {
     if (Object.prototype.hasOwnProperty.call(excludes, key)) {
@@ -335,7 +335,7 @@ function exclude(uri, callback) {
       }
 
       if (selections && selections.length > 0) {
-        const excludes = vscode.workspace.getConfiguration().get('files.exclude', vscode.ConfigurationTarget.Workspace) || {}
+        const excludes = getCurrentWorkspaceExcludes()
 
         logger('Current Excludes:', 'debug')
         logger(excludes)
@@ -363,6 +363,28 @@ function exclude(uri, callback) {
   })
 }
 
+function getCurrentWorkspaceExcludes() {
+  /* ***************************************************************************************** *
+   * Issue:     getConfiguration() returns every single setting (across each scope) merged     *
+   * Solution:  get all settings, but return only the user defined settings                    *
+   * see:       https://code.visualstudio.com/api/references/vscode-api#WorkspaceConfiguration *
+   * ***************************************************************************************** */
+
+  // get all settings
+  const config = vscode.workspace.getConfiguration()
+
+  // filter out system defaults
+  const workspaceSettings = config.inspect('files.exclude')?.workspaceValue || {};
+  const workspaceFolderValue  = config.inspect('files.exclude')?.workspaceFolderValue || {};
+  const userSettingsOnly = {...workspaceSettings, ...workspaceFolderValue}
+  // logger('')
+  // logger('all config keys:')
+  // logger(Object.keys(config.inspect()))
+  // logger('')
+  return userSettingsOnly
+
+}
+
 /**
  * Get Excluded Fils
  */
@@ -371,8 +393,7 @@ function getExcludes() {
     return []
   }
 
-  const excludes = vscode.workspace.getConfiguration().get('files.exclude', vscode.ConfigurationTarget.Workspace) || {}
-
+  const excludes = getCurrentWorkspaceExcludes()
   let list = excludes ? Object.keys(excludes) : []
 
   for (let i = 0; i < list.length; i++) {
@@ -462,7 +483,7 @@ function saveContext(_context) {
  */
 function toggleAll(callback) {
   try {
-    const excludes = vscode.workspace.getConfiguration().get('files.exclude', vscode.ConfigurationTarget.Workspace)
+    const excludes = getCurrentWorkspaceExcludes()
     const backup = vscode.workspace.getConfiguration().get('explorerExclude.backup', vscode.ConfigurationTarget.Workspace)
     const restore = JSON.stringify(backup) !== '{}'
 
@@ -512,7 +533,7 @@ function toggleExclude(key, callback) {
     return false
   }
 
-  const excludes = vscode.workspace.getConfiguration().get('files.exclude', vscode.ConfigurationTarget.Workspace) || {}
+  const excludes = getCurrentWorkspaceExcludes()
 
   // Invert Selection
   if (key && Object.prototype.hasOwnProperty.call(excludes, key)) {

@@ -7,7 +7,8 @@ const util = require('./util')
 
 class ViewPane {
   constructor(viewPaneName) {
-    this.defaultExclude = ['**/.git', '**/.svn', '**/.hg', '**/CVS', '**/.DS_Store', '**/Thumbs.db', '**/*.git']
+    // == TODO == add setting to add custom defaults to always inject
+    this.defaultExclude = []
     this.viewUpdatedEventEmitter = new vscode.EventEmitter()
     this.onDidChangeTreeData = this.viewUpdatedEventEmitter.event
     this.tree = {
