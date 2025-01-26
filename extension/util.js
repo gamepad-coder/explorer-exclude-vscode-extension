@@ -197,6 +197,7 @@ const updateConfig = (excludes, callback, message) => {
       .getConfiguration()
       .update('files.exclude', excludes, vscode.ConfigurationTarget.Workspace)
       .then(() => {
+        logger('=== updateConfig: .then() ===')
         // Remove Backup since we made a manual change
         vscode.workspace
           .getConfiguration()
@@ -364,12 +365,12 @@ function exclude(uri, callback) {
 }
 
 function getCurrentWorkspaceExcludes() {
+  logger('== in getCurrentWorkspaceExcludes ==')
   /* ***************************************************************************************** *
    * Issue:     getConfiguration() returns every single setting (across each scope) merged     *
    * Solution:  get all settings, but return only the user defined settings                    *
    * see:       https://code.visualstudio.com/api/references/vscode-api#WorkspaceConfiguration *
    * ***************************************************************************************** */
-
   // get all settings
   const config = vscode.workspace.getConfiguration()
 
@@ -377,6 +378,10 @@ function getCurrentWorkspaceExcludes() {
   const workspaceSettings = config.inspect('files.exclude')?.workspaceValue || {};
   const workspaceFolderValue  = config.inspect('files.exclude')?.workspaceFolderValue || {};
   const userSettingsOnly = {...workspaceSettings, ...workspaceFolderValue}
+  // logger('')
+  logger('userSettingsOnly:')
+  logger(userSettingsOnly)
+  // logger('')
   // logger('')
   // logger('all config keys:')
   // logger(Object.keys(config.inspect()))
@@ -394,14 +399,18 @@ function getExcludes() {
   }
 
   const excludes = getCurrentWorkspaceExcludes()
-  let list = excludes ? Object.keys(excludes) : []
+  return getTreeDataFromExcludeSettings(excludes)
+}
 
+function getTreeDataFromExcludeSettings(excludes) {
+  let list = excludes ? Object.keys(excludes) : []
+  
   for (let i = 0; i < list.length; i++) {
     let enabled = excludes[list[i]] ? 1 : 0
     list[i] = `${list[i]}|${enabled}`
   }
-
-  return list
+  
+  return list  
 }
 
 /**
@@ -543,6 +552,89 @@ function toggleExclude(key, callback) {
   }
 }
 
+function moveItemUp(key, callback) {
+  logger('')
+  logger('== here in moveItemUp() ==')
+  logger('key:')
+  // logger(key)
+}
+
+function moveItemDown(treeItem, callback) {
+// function moveItemDown(treeItem, callback) {
+  if (!treeItem) {
+    return false
+  }
+  
+  const treeItemValue = treeItem.value
+  const ruleName = treeItemValue.substring(0, treeItemValue.length - 2)
+  // logger('')
+  // logger('== here in moveItemDown() ==')
+  // logger('treeItemValue:')
+  // logger(treeItemValue)
+  // logger('')
+  // logger('ruleName:')
+  // logger(ruleName)
+  // logger('')
+  // logger('Object.keys(uri)')
+  // logger(Object.keys(treeItem))
+  // logger('')
+  
+  const excludes = getCurrentWorkspaceExcludes()
+  // logger('')
+  // logger('')
+  // logger('excludes:')
+  // logger(excludes)
+  // logger('')
+
+  const entries = Object.entries(excludes)
+  
+  // logger('')
+  // logger('entries was...')
+  // logger(entries)
+  // logger('')
+  const oldIndex = entries.findIndex( (key) => key[0] === ruleName)
+  const NOT_FOUND = -1
+  if (oldIndex === NOT_FOUND) {
+    return false
+  }
+  if (oldIndex === entries.length - 1) {
+    return false
+  }
+  // logger('')
+  // logger('oldIndex...')
+  // logger(oldIndex)
+  let tmp = entries[oldIndex]
+  entries[oldIndex] = entries[oldIndex+1]
+  entries[oldIndex+1] = tmp
+  
+  // logger('')
+  // logger('entries to become...')
+  // logger(entries)
+  // logger('')
+
+  // hack to ensure panel refreshes (if we just move an item down, the config hasn't changed, so the signal doesn't emit)
+  const newExcludes = Object.fromEntries(entries)
+
+  // const callback = () => pane.update(
+  //   getTreeDataFromExcludeSettings(newExcludes)
+  // )
+  newExcludes[ruleName] = !newExcludes[ruleName]
+  updateConfig(newExcludes, callback)
+  
+  newExcludes[ruleName] = !newExcludes[ruleName]
+  updateConfig(newExcludes)
+  
+  logger('== at the end of moveItemDown ==')
+  logger('')
+  // pane.update(getExcludes())
+  // updateConfig(newExcludes, callback, "Moved item " + ruleName + " down.")
+
+  // newExcludes[ruleName] = !newExcludes[ruleName]
+  // updateConfig(newExcludes, callback)
+
+  // updateConfig(newExcludes, callback, "Moved item " + ruleName + " down.")
+}
+
 module.exports = {
   deleteExclude,
   disableAll,
@@ -556,4 +648,6 @@ module.exports = {
   saveContext,
   toggleAll,
   toggleExclude,
+  moveItemUp,
+  moveItemDown,
 }

@@ -54,6 +54,8 @@
     "onCommand:explorer-exclude.hasLoaded",
     "onCommand:explorer-exclude.missingWorkspace",
     "onCommand:explorer-exclude.remove",
+    "onCommand:explorer-exclude.moveItemUp",
+    "onCommand:explorer-exclude.moveItemDown",
     "onCommand:explorer-exclude.reset",
     "onCommand:explorer-exclude.toggle",
     "onCommand:explorer-exclude.toggleAllOff",
@@ -114,6 +116,14 @@
       {
         "command": "explorer-exclude.remove",
         "title": "%package.remove%"
+      },
+      {
+        "command": "explorer-exclude.moveItemUp",
+        "title": "Move Item Up"
+      },
+      {
+        "command": "explorer-exclude.moveItemDown",
+        "title": "Move Item Down"
       },
       {
         "command": "explorer-exclude.toggle",
@@ -184,9 +194,19 @@
       ],
       "view/item/context": [
         {
-          "command": "explorer-exclude.remove",
+          "command": "explorer-exclude.moveItemUp",
           "group": "explorer-exclude@1",
-          "when": "explorer-exclude.hasLoaded && !explorer-exclude.missingWorkspace && view == explorerExclude.pane.items && viewItem && viewItem != '**/.git' && viewItem != '**/.svn'&& viewItem != '**/.hg'&& viewItem != '**/CVS'&& viewItem != '**/.DS_Store' && viewItem != '**/Thumbs.db' && viewItem != '**/*.git'"
+          "when": "explorer-exclude.hasLoaded && !explorer-exclude.missingWorkspace && view == explorerExclude.pane.items && viewItem"
+        },
+        {
+          "command": "explorer-exclude.moveItemDown",
+          "group": "explorer-exclude@2",
+          "when": "explorer-exclude.hasLoaded && !explorer-exclude.missingWorkspace && view == explorerExclude.pane.items && viewItem"
+        },
+        {
+          "command": "explorer-exclude.remove",
+          "group": "explorer-exclude@3",
+          "when": "explorer-exclude.hasLoaded && !explorer-exclude.missingWorkspace && view == explorerExclude.pane.items && viewItem"
         }
       ],
       "view/title": [
