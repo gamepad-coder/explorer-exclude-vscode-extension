@@ -143,6 +143,10 @@ function activate(context) {
   context.subscriptions.push(toggle)
   context.subscriptions.push(toggleAllOff)
   context.subscriptions.push(toggleAllOn)
+
+  vscode.workspace.onDidChangeConfiguration(event => {
+    pane.update(util.getExcludes())
+  })
 }
 
 /**
