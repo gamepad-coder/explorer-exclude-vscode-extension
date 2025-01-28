@@ -197,7 +197,6 @@ const updateConfig = (excludes, callback, message) => {
       .getConfiguration()
       .update('files.exclude', excludes, vscode.ConfigurationTarget.Workspace)
       .then(() => {
-        logger('=== updateConfig: .then() ===')
         // Remove Backup since we made a manual change
         vscode.workspace
           .getConfiguration()
@@ -263,7 +262,7 @@ function disableAll(callback) {
  * @param {function} callback
  */
 function enableAll(callback) {
-  const excludes = getCurrentWorkspaceExcludes() || {}
+  const excludes = getCurrentWorkspaceExcludes()
 
   for (let key in excludes) {
     if (Object.prototype.hasOwnProperty.call(excludes, key)) {
@@ -378,14 +377,7 @@ function getCurrentWorkspaceExcludes() {
   const workspaceSettings = config.inspect('files.exclude')?.workspaceValue || {};
   const workspaceFolderValue  = config.inspect('files.exclude')?.workspaceFolderValue || {};
   const userSettingsOnly = {...workspaceSettings, ...workspaceFolderValue}
-  // logger('')
-  logger('userSettingsOnly:')
-  logger(userSettingsOnly)
-  // logger('')
-  // logger('')
-  // logger('all config keys:')
-  // logger(Object.keys(config.inspect()))
-  // logger('')
+
   return userSettingsOnly
 
 }
@@ -552,87 +544,85 @@ function toggleExclude(key, callback) {
   }
 }
 
-function moveItemUp(key, callback) {
-  logger('')
-  logger('== here in moveItemUp() ==')
-  logger('key:')
-  // logger(key)
-}
 
-function moveItemDown(treeItem, callback) {
-// function moveItemDown(treeItem, callback) {
+function moveItemUp(treeItem, callback) {
   if (!treeItem) {
     return false
   }
   
   const treeItemValue = treeItem.value
   const ruleName = treeItemValue.substring(0, treeItemValue.length - 2)
-  // logger('')
-  // logger('== here in moveItemDown() ==')
-  // logger('treeItemValue:')
-  // logger(treeItemValue)
-  // logger('')
-  // logger('ruleName:')
-  // logger(ruleName)
-  // logger('')
-  // logger('Object.keys(uri)')
-  // logger(Object.keys(treeItem))
-  // logger('')
   
   const excludes = getCurrentWorkspaceExcludes()
-  // logger('')
-  // logger('')
-  // logger('excludes:')
-  // logger(excludes)
-  // logger('')
 
   const entries = Object.entries(excludes)
   
-  // logger('')
-  // logger('entries was...')
-  // logger(entries)
-  // logger('')
   const oldIndex = entries.findIndex( (key) => key[0] === ruleName)
   const NOT_FOUND = -1
+
+  // skip if this entry is missing
   if (oldIndex === NOT_FOUND) {
     return false
   }
-  if (oldIndex === entries.length - 1) {
+  // skip if this entry is the very first item
+  if (oldIndex === 0) {
     return false
   }
-  // logger('')
-  // logger('oldIndex...')
-  // logger(oldIndex)
-  let tmp = entries[oldIndex]
-  entries[oldIndex] = entries[oldIndex+1]
-  entries[oldIndex+1] = tmp
-  
-  // logger('')
-  // logger('entries to become...')
-  // logger(entries)
-  // logger('')
 
-  // hack to ensure panel refreshes (if we just move an item down, the config hasn't changed, so the signal doesn't emit)
+  // we have to use the old swap syntax
+  let tmp = entries[oldIndex]
+  entries[oldIndex] = entries[oldIndex-1]
+  entries[oldIndex-1] = tmp
+  
+
+  // hack to ensure panel refreshes (if we just move an item up, the config hasn't changed, so the signal doesn't emit)
   const newExcludes = Object.fromEntries(entries)
 
-  // const callback = () => pane.update(
-  //   getTreeDataFromExcludeSettings(newExcludes)
-  // )
   newExcludes[ruleName] = !newExcludes[ruleName]
   updateConfig(newExcludes, callback)
   
   newExcludes[ruleName] = !newExcludes[ruleName]
   updateConfig(newExcludes)
+}
+
+function moveItemDown(treeItem, callback) {
+  if (!treeItem) {
+    return false
+  }
   
-  logger('== at the end of moveItemDown ==')
-  logger('')
-  // pane.update(getExcludes())
-  // updateConfig(newExcludes, callback, "Moved item " + ruleName + " down.")
+  const treeItemValue = treeItem.value
+  const ruleName = treeItemValue.substring(0, treeItemValue.length - 2)
+  
+  const excludes = getCurrentWorkspaceExcludes()
 
-  // newExcludes[ruleName] = !newExcludes[ruleName]
-  // updateConfig(newExcludes, callback)
+  const entries = Object.entries(excludes)
+  
+  const oldIndex = entries.findIndex( (key) => key[0] === ruleName)
+  const NOT_FOUND = -1
 
-  // updateConfig(newExcludes, callback, "Moved item " + ruleName + " down.")
+  // skip if this entry is missing
+  if (oldIndex === NOT_FOUND) {
+    return false
+  }
+  // skip if this entry is the very last item
+  if (oldIndex === entries.length - 1) {
+    return false
+  }
+
+  // we have to use the old swap syntax
+  let tmp = entries[oldIndex]
+  entries[oldIndex] = entries[oldIndex+1]
+  entries[oldIndex+1] = tmp
+  
+
+  // hack to ensure panel refreshes (if we just move an item down, the config hasn't changed, so the signal doesn't emit)
+  const newExcludes = Object.fromEntries(entries)
+
+  newExcludes[ruleName] = !newExcludes[ruleName]
+  updateConfig(newExcludes, callback)
+  
+  newExcludes[ruleName] = !newExcludes[ruleName]
+  updateConfig(newExcludes)
 }
 
 module.exports = {

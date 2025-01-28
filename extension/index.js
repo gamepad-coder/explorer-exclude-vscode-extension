@@ -82,35 +82,19 @@ function activate(context) {
   })
 
   const moveItemUp = vscode.commands.registerCommand('explorer-exclude.moveItemUp', (uri) => {
-    if (uri && uri.value) {
-      const value = uri.value
-      const key = value.substring(0, value.length - 2)
-
-      util.logger(`Move item up: ${uri}`, 'debug')
-      util.logger(`Move item up: ${key}`, 'debug')
-
-      util.moveItemUp(uri, function () {
-        setTimeout(function () {
-          pane.update(util.getExcludes())
-        }, timeout)
-      })
-    }
-  })
-
-  const moveItemDown = vscode.commands.registerCommand('explorer-exclude.moveItemDown', (uri) => {
-    // context.workspaceState.update('explorer-exclude-update-config-order-in-progress', true)
-    // util.moveItemDown(uri, pane)
-    // context.workspaceState.update('explorer-exclude-update-config-order-in-progress', false)
     context.workspaceState.update('explorer-exclude-update-config-order-in-progress', true)
-    util.moveItemDown(uri, () => {
-      util.logger("\n\n\n\t\t hi I'm the callback!")
+    util.moveItemUp(uri, () => {
       context.workspaceState.update('explorer-exclude-update-config-order-in-progress', false)
       pane.update(util.getExcludes())
     })
-      // util.moveItemDown(uri, function () {
-      //   const latestExcludes = util.getExcludes()
-      //   pane.update(latestExcludes)        
-      // })
+  })
+
+  const moveItemDown = vscode.commands.registerCommand('explorer-exclude.moveItemDown', (uri) => {
+    context.workspaceState.update('explorer-exclude-update-config-order-in-progress', true)
+    util.moveItemDown(uri, () => {
+      context.workspaceState.update('explorer-exclude-update-config-order-in-progress', false)
+      pane.update(util.getExcludes())
+    })
   })
 
   const reset = vscode.commands.registerCommand('explorer-exclude.reset', async () => {
@@ -177,9 +161,7 @@ function activate(context) {
   context.subscriptions.push(toggleAllOn)
 
   vscode.workspace.onDidChangeConfiguration (event => {
-    util.logger('\n -- onDidChangeConfiguration() -- \n') // TODO
     if (false === context.workspaceState.get('explorer-exclude-update-config-order-in-progress')) {
-      util.logger('\n    onDidChangeConfiguration() not locked -- \n') // TODO
       pane.update(util.getExcludes())
     }
     
